@@ -22,11 +22,6 @@ import android.util.Log
 import android.view.View
 import com.neoteric.gamespace.R
 import com.neoteric.gamespace.utils.GameModeUtils.Companion.describeGameMode
-import com.neoteric.gamespace.utils.PerformanceModeManager
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.getPerformanceModeStatus
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.getSessionHandle
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.setPerformanceModeStatus
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.setSessionHandle
 import com.neoteric.gamespace.utils.di.ServiceViewEntryPoint
 import com.neoteric.gamespace.utils.entryPointOf
 
@@ -34,8 +29,6 @@ import com.neoteric.gamespace.utils.entryPointOf
 class GameModeTile @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : BaseTile(context, attrs) {
-
-    private var mIsPerformanceModeOn = false
 
     private val gameModeUtils by lazy {
         context.entryPointOf<ServiceViewEntryPoint>().gameModeUtils()
@@ -53,34 +46,10 @@ class GameModeTile @JvmOverloads constructor(
             summary?.text = context.describeGameMode(value)
             isSelected = value != GameManager.GAME_MODE_STANDARD
             gameModeUtils.setActiveGameMode(systemSettings, value)
-            if(value==2)
-            {
-                val handle = PerformanceModeManager.getInstance().turnOnPerformanceMode()
-                if (-1 != handle) {
-                    setSessionHandle(this.context, handle)
-                    setPerformanceModeStatus(this.context, true)
-                    return
-                }
-            }
-            else
-            {
-                val handle2 = getSessionHandle(this.context)
-                if (-1 == handle2) {
-                } else if (-1 != PerformanceModeManager.getInstance()
-                        .turnOffPerformanceMode(handle2)
-                ) {
-                    setSessionHandle(this.context, -1)
-                    setPerformanceModeStatus(this.context, false)
-                } else {
-                }
-            }
         }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        val performanceModeStatus = getPerformanceModeStatus(this.context)
-        mIsPerformanceModeOn = performanceModeStatus
-        tryTurnOnPerformanceMode(this.context);
         title?.text = context.getString(R.string.game_mode_title)
         activeMode = gameModeUtils.activeGame?.mode ?: GameManager.GAME_MODE_STANDARD
         icon?.setImageResource(R.drawable.ic_speed)
@@ -91,17 +60,4 @@ class GameModeTile @JvmOverloads constructor(
         val current = modes.indexOf(activeMode)
         activeMode = modes[if (current == modes.size - 1) 0 else current + 1]
     }
-    private fun tryTurnOnPerformanceMode(appContext: Context) {
-        val lastHandle = getSessionHandle(appContext)
-        if (isPerformanceModeOn() && -1 == lastHandle) {
-            val handle = PerformanceModeManager.getInstance().turnOnPerformanceMode()
-            if (-1 != handle) {
-                setSessionHandle(appContext, handle)
-            }
-        }
-    }
-    fun isPerformanceModeOn(): Boolean {
-        return mIsPerformanceModeOn
-    }
-
 }

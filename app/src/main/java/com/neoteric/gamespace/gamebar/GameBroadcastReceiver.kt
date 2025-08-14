@@ -23,11 +23,6 @@ import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.os.UserHandle
-import com.neoteric.gamespace.utils.PerformanceModeManager
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.getPerformanceModeStatus
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.getSessionHandle
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.setPerformanceModeStatus
-import com.neoteric.gamespace.utils.SharedPreferenceUtils.setSessionHandle
 
 class GameBroadcastReceiver : BroadcastReceiver() {
     private val handler by lazy { Handler(Looper.getMainLooper()) }
@@ -46,15 +41,6 @@ class GameBroadcastReceiver : BroadcastReceiver() {
 
     private fun Context.onGameStop(intent: Intent) {
         handler.post { resendBroadcast(intent) }
-        val handle = getSessionHandle(this)
-        if (-1 == handle) {
-        } else if (-1 != PerformanceModeManager.getInstance()
-                .turnOffPerformanceMode(handle)
-        ) {
-            setSessionHandle(this, -1)
-            setPerformanceModeStatus(this, false)
-        } else {
-        }
         SessionService.stop(this)
     }
 
