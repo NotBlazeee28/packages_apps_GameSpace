@@ -43,40 +43,40 @@
             android:summary="%s"
             android:title="@string/in_game_calls_title" />
 
-        <org.neoteric.preference.SystemSettingSwitchPreference
+        <com.android.settings.halcyon.preference.SystemSettingSwitchPreference
             android:key="gamespace_suppress_fullscreen_intent"
             android:summary="@string/suppress_fullscreen_intent_summary"
             android:title="@string/suppress_fullscreen_intent_title" />
 
-        <org.neoteric.preference.SwitchPreference
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="gamespace_stay_awake"
             android:title="@string/stay_awake_title" />
 
-        <org.neoteric.preference.SwitchPreference
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="gamespace_lock_gesture"
             android:title="@string/lock_gesture_title" />
 
-        <org.neoteric.preference.SwitchPreference
+        <androidx.preference.SwitchPreferenceCompat
             android:key="gamespace_heads_up_disabled"
             android:title="@string/heads_up_disabled_title" />
 
-        <org.neoteric.preference.SwitchPreference
+        <androidx.preference.SwitchPreferenceCompat
             android:key="gamespace_auto_brightness_disabled"
             android:title="@string/auto_brightness_disabled_title" />
 
-        <org.neoteric.preference.SwitchPreference
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="gamespace_tfgesture_disabled"
             android:title="@string/three_screenshot_disabled_title" />
 
-        <org.neoteric.preference.SwitchPreference
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="gamespace_adb_disabled"
             android:title="@string/adb_disabled_title" />
 
-        <org.neoteric.preference.CustomSeekBarPreference
+        <com.android.settings.halcyon.preference.CustomSeekBarPreference
             android:key="gamespace_menu_opacity"
             android:title="@string/gamespace_menu_opacity_title"
             android:defaultValue="100"
