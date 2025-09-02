@@ -22,13 +22,13 @@ import android.provider.Settings
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
 import dagger.hilt.android.AndroidEntryPoint
+import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 import com.halcyon.gamespace.R
 import com.halcyon.gamespace.preferences.AppListPreferences
 import com.halcyon.gamespace.preferences.appselector.AppSelectorActivity
 
-@AndroidEntryPoint(PreferenceFragmentCompat::class)
+@AndroidEntryPoint(SettingsBasePreferenceFragment::class)
 class SettingsFragment : Hilt_SettingsFragment() {
 
     private var apps: AppListPreferences? = null
