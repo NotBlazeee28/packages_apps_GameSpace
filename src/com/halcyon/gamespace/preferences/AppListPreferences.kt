@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Chaldeaprjkt
+ *           (C) 2025 Halcyon Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.halcyon.gamespace.preferences
 
 import android.app.Activity
@@ -27,15 +29,19 @@ import com.halcyon.gamespace.R
 import com.halcyon.gamespace.data.GameConfig
 import com.halcyon.gamespace.data.UserGame
 import com.halcyon.gamespace.settings.PerAppSettingsFragment
+import com.halcyon.gamespace.utils.GameDetectionUtils
 import com.halcyon.gamespace.utils.GameModeUtils.Companion.describeGameMode
 import com.halcyon.gamespace.utils.di.ServiceViewEntryPoint
 import com.halcyon.gamespace.utils.entryPointOf
+import org.json.JSONArray
 
-
-class AppListPreferences @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
-    PreferenceCategory(context, attrs), Preference.OnPreferenceClickListener {
+class AppListPreferences @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null
+) : PreferenceCategory(context, attrs), Preference.OnPreferenceClickListener {
 
     private val apps = mutableListOf<UserGame>()
+
     private val systemSettings by lazy {
         context.entryPointOf<ServiceViewEntryPoint>().systemSettings()
     }
@@ -52,7 +58,7 @@ class AppListPreferences @JvmOverloads constructor(context: Context, attrs: Attr
 
     private val makeAddPref by lazy {
         Preference(context).apply {
-            title = "Add"
+            title = context.getString(R.string.add_game_title)
             key = KEY_ADD_GAME
             setIcon(R.drawable.ic_add)
             isPersistent = false
@@ -63,17 +69,55 @@ class AppListPreferences @JvmOverloads constructor(context: Context, attrs: Attr
     private fun getAppInfo(packageName: String): ApplicationInfo? = try {
         val flags = PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong())
         context.packageManager.getApplicationInfo(packageName, flags)
-    } catch (e: PackageManager.NameNotFoundException) {
+    } catch (_: PackageManager.NameNotFoundException) {
         null
     }
+
+    private val prefs by lazy {
+        context.getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
+    }
+
+    private var excludedGames: MutableSet<String>
+        get() {
+            val json = prefs.getString("excluded_games", null) ?: return mutableSetOf()
+            return try {
+                val arr = JSONArray(json)
+                val list = mutableListOf<String>()
+                for (i in 0 until arr.length()) list.add(arr.getString(i))
+                list.toMutableSet()
+            } catch (_: Exception) {
+                mutableSetOf()
+            }
+        }
+        set(value) {
+            prefs.edit().putString("excluded_games", JSONArray(value).toString()).apply()
+        }
 
     fun updateAppList() {
         apps.clear()
         if (!systemSettings.userGames.isNullOrEmpty()) {
             apps.addAll(systemSettings.userGames)
         }
+
+        val detectedGames = GameDetectionUtils.detectInstalledGames(context)
+        if (detectedGames.isNotEmpty()) {
+            var updated = false
+            val excluded = excludedGames
+
+            for (pkg in detectedGames) {
+                if (!apps.any { it.packageName == pkg } && !excluded.contains(pkg)) {
+                    apps.add(UserGame(pkg))
+                    gameModeUtils.setIntervention(pkg, GameConfig.ModeBuilder.build())
+                    updated = true
+                }
+            }
+
+            if (updated) systemSettings.userGames = apps
+        }
+
         removeAll()
         addPreference(makeAddPref)
+
         apps.filter { getAppInfo(it.packageName) != null }
             .map {
                 val info = getAppInfo(it.packageName)
@@ -95,6 +139,10 @@ class AppListPreferences @JvmOverloads constructor(context: Context, attrs: Attr
         if (!apps.any { it.packageName == packageName }) {
             apps.add(UserGame(packageName))
         }
+
+        val excluded = excludedGames
+        if (excluded.remove(packageName)) excludedGames = excluded
+
         systemSettings.userGames = apps
         gameModeUtils.setIntervention(packageName, GameConfig.ModeBuilder.build())
         updateAppList()
@@ -104,6 +152,11 @@ class AppListPreferences @JvmOverloads constructor(context: Context, attrs: Attr
         apps.removeIf { it.packageName == packageName }
         systemSettings.userGames = apps
         gameModeUtils.setIntervention(packageName, null)
+
+        val excluded = excludedGames
+        excluded.add(packageName)
+        excludedGames = excluded
+
         updateAppList()
     }
 
